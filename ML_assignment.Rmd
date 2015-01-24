@@ -13,6 +13,8 @@ When you click the **Knit** button a document will be generated that includes bo
     options(warn=-1)
     library(ggplot2)
     library(plyr)
+    library(caret)
+    library(mboost)
     options(warn=0)
     
     setwd("C:/Users/elarsen/Coursera work")
@@ -23,8 +25,17 @@ When you click the **Knit** button a document will be generated that includes bo
 ```
 
 ```{r}
+## Create training set split
+    inTrain<-createDataPartition(y=train_data$classe, p=.75, list=FALSE)
+    training<-train_data[inTrain,]
+    testing<-train_data[inTrain,]
+    
+    set.seed(4150)
+    modelFit<-train(classe ~., data=training, method="blackboost")
+    modelfit
+
 ```
 
-
+#Expected Error rate
 ```{r}
 ```
