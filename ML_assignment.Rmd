@@ -13,13 +13,14 @@ When you click the **Knit** button a document will be generated that includes bo
     options(warn=-1)
     library(ggplot2)
     library(plyr)
+    library(rattle)
     library(caret)
-    library(mboost)
+##    library(mboost)
     options(warn=0)
     
     setwd("C:/Users/elarsen/Coursera work")
     train_data<-read.csv("machine learning/MachLearnAssignment/pml-training.csv")
-    test_data<-read.csv("machine learning/MachLearnAssignment/pml-testing.csv")
+##    test_data<-read.csv("machine learning/MachLearnAssignment/pml-testing.csv")
 
 
 ```
@@ -29,10 +30,36 @@ When you click the **Knit** button a document will be generated that includes bo
     inTrain<-createDataPartition(y=train_data$classe, p=.75, list=FALSE)
     training<-train_data[inTrain,]
     testing<-train_data[inTrain,]
+
+
+```{r}
+##Generate series of pairs plots for readabilty.
+i<-1
+    for(i in seq(from=1, to=(dim(training)[2]-3), by=10)){
+
+        ##
+    
+    print(c("Start", i, "end",i+9))
+##    x<-featurePlot(x=training[,i:(i+9)], y=factor(training$classe), plot="pairs")
+ ##   print(x)
+    }
+
+```
+
+```{r}
     
     set.seed(4150)
-    modelFit<-train(classe ~., data=training, method="blackboost")
-    modelfit
+    factorSet<-c(78,113,116,121,123,131,134,136,139,145,160)
+    x<-featurePlot(x=training[,factorSet[1:10]], y=factor(training$classe), plot="pairs")
+    print(x)
+##    modelFit<-train(classe ~., data=training[,factorSet], method="rpart")
+    modelFit<-train(classe ~., data=training[,8:160], method="rpart")
+    fancyRpartPlot(modelFit$finalModel)
+
+
+
+##    modelFit<-train(classe ~., data=training, method="rpart")
+    ##modelFit
 
 ```
 
