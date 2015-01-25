@@ -19,17 +19,38 @@ When you click the **Knit** button a document will be generated that includes bo
     options(warn=0)
     
     setwd("C:/Users/elarsen/Coursera work")
+
     train_data<-read.csv("machine learning/MachLearnAssignment/pml-training.csv")
 ##    test_data<-read.csv("machine learning/MachLearnAssignment/pml-testing.csv")
+    dim(train_data)
+    train_data<-train_data[ , ! apply( train_data , 2 , function(x) any(is.na(x)) ) ]
+    dim(train_data)
 
-
+    
 ```
 
 ```{r}
 ## Create training set split
     inTrain<-createDataPartition(y=train_data$classe, p=.75, list=FALSE)
     training<-train_data[inTrain,]
-    testing<-train_data[inTrain,]
+    testing<-train_data[-inTrain,]
+
+
+```
+
+```{r}
+    forest<-train(classe ~., data=training[,2:len_data], method="rf", prox=TRUE)
+
+```
+
+```{r}
+    pred<-predict(forest,testing[,2:len_data])
+    testing$predRight<-pred==testing$classe
+    table(pred,testing$classe)
+
+```
+
+
 
 
 ```{r}
