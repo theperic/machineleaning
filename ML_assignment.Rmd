@@ -5,31 +5,32 @@ date: "Friday, January 23, 2015"
 output: html_document
 ---
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+After loading the data I removed all columns contianing null values.  This left 93 columns in my data set, with column 93 being the classe variable to be predicted.  After preliminary data analysis I excluded the x variable as it is an index, and the data was ordered by the class, thus this variable provides a correlation we cannot expect in future data sets.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r}
-    options(warn=-1)
+```{r, cache=TRUE}
     library(ggplot2)
-    library(plyr)
     library(rattle)
     library(caret)
-##    library(mboost)
-    options(warn=0)
     
-    setwd("C:/Users/elarsen/Coursera work")
 
-    train_data<-read.csv("machine learning/MachLearnAssignment/pml-training.csv")
+    train_data<-read.csv("pml-training.csv")
 ##    test_data<-read.csv("machine learning/MachLearnAssignment/pml-testing.csv")
+    ## drop columns with NAs
     dim(train_data)
     train_data<-train_data[ , ! apply( train_data , 2 , function(x) any(is.na(x)) ) ]
+    
     dim(train_data)
+    ## Remove the X column as this is an idex that happens to be highly correlated to the outcomes due to sorting.
+    train_data<-train_data[ ,-1 ]
+    dim(train_data)
+    
 
     
 ```
 
-```{r}
+I allocated 75% of the data to my training set and reserved 25% for cross validation.
+
+```{r, cache=TRUE}
 ## Create training set split
     inTrain<-createDataPartition(y=train_data$classe, p=.75, list=FALSE)
     training<-train_data[inTrain,]
@@ -38,52 +39,29 @@ When you click the **Knit** button a document will be generated that includes bo
 
 ```
 
-```{r}
-    forest<-train(classe ~., data=training[,2:len_data], method="rf", prox=TRUE)
+After testing linear and rPart models I selected the Random Forest model for my analysis.
 
-```
-
-```{r}
-    pred<-predict(forest,testing[,2:len_data])
-    testing$predRight<-pred==testing$classe
-    table(pred,testing$classe)
-
-```
-
-
-
-
-```{r}
-##Generate series of pairs plots for readabilty.
-i<-1
-    for(i in seq(from=1, to=(dim(training)[2]-3), by=10)){
-
-        ##
-    
-    print(c("Start", i, "end",i+9))
-##    x<-featurePlot(x=training[,i:(i+9)], y=factor(training$classe), plot="pairs")
- ##   print(x)
-    }
+```{r, cache=TRUE}
+    forest<-train(classe ~., data=testing, method="rf", ntree=10,prox=TRUE)
+    forest2<-train(classe ~., data=training, method="rf", ntree=200,prox=TRUE)
 
 ```
 
 ```{r}
     
-    set.seed(4150)
-    factorSet<-c(78,113,116,121,123,131,134,136,139,145,160)
-    x<-featurePlot(x=training[,factorSet[1:10]], y=factor(training$classe), plot="pairs")
-    print(x)
-##    modelFit<-train(classe ~., data=training[,factorSet], method="rpart")
-    modelFit<-train(classe ~., data=training[,8:160], method="rpart")
-    fancyRpartPlot(modelFit$finalModel)
-
-
-
-##    modelFit<-train(classe ~., data=training, method="rpart")
-    ##modelFit
-
 ```
+
+
+
+
 
 #Expected Error rate
+
+Based on the cross validation of running the prediction against the partitioned section of the training data file, I expect the error rate in the test data to be approximately:
+
+
 ```{r}
+pred<-predict(forest,training)
+    training$predRight<-pred==training$classe
+    table(pred,training$classe)
 ```
