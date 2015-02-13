@@ -7,6 +7,8 @@ output: html_document
 ```{r, cache=TRUE}
     library(caret)
 ```
+#Data Preparation
+
 After loading the data I removed all columns contianing null values, first columns containing nulls in the training data, then applying the same technique for nulls in the test data.  This left 53 columns in my data set.  
 
 ```{r, cache=TRUE}
@@ -45,6 +47,8 @@ I also noticed that several numberic data points were stored as factors, so I co
     
 ```
 
+#Partitioning
+
 I allocated 60% of the data to my training set and reserved 40% for cross validation.
 
 ```{r, cache=TRUE}
@@ -55,6 +59,8 @@ I allocated 60% of the data to my training set and reserved 40% for cross valida
 
 
 ```
+
+#Model Building
 
 After testing linear and rPart models I selected the Random Forest model for my analysis. I have read that the number of trees required is optimized at when set to the square root of the vaiables. Here after removing incomplete variables I had 53 remaining, requiring approximately 8 trees.   
 
@@ -93,6 +99,8 @@ For the test data file I ran my final model against the test data with the follo
     answers<-as.character(pred_from_test)
     answers
 ```
+
+#Generating the Evaluation Files
 
 Finally, I output the results into separate files for upload.
 
