@@ -1,51 +1,93 @@
 ---
 title: "Machine Learning Assignment 1"
 author: "Eric Larsen"
-date: "Friday, January 23, 2015"
+date: "Friday, February 13, 2015"
 output: html_document
 ---
-
-After loading the data I removed all columns contianing null values.  This left 93 columns in my data set, with column 93 being the classe variable to be predicted.  After preliminary data analysis I excluded the x variable as it is an index, and the data was ordered by the class, thus this variable provides a correlation we cannot expect in future data sets.
+```{r, cache=TRUE}
+    library(caret)
+```
+After loading the data I removed all columns contianing null values, first columns containing nulls in the training data, then applying the same technique for nulls in the test data.  This left  columns in my data set, with column 93 being the classe variable to be predicted.  
 
 ```{r, cache=TRUE}
-    library(ggplot2)
-    library(rattle)
-    library(caret)
     
 
     train_data<-read.csv("pml-training.csv")
-##    test_data<-read.csv("machine learning/MachLearnAssignment/pml-testing.csv")
-    ## drop columns with NAs
-    dim(train_data)
+    test_data<-read.csv("pml-testing.csv")
+
+## drop columns with NAs in the training data
+    test_data<-test_data[ , ! apply( train_data , 2 , function(x) any(is.na(x)) ) ]
     train_data<-train_data[ , ! apply( train_data , 2 , function(x) any(is.na(x)) ) ]
     
-    dim(train_data)
-    ## Remove the X column as this is an idex that happens to be highly correlated to the outcomes due to sorting.
-    train_data<-train_data[ ,-1 ]
-    dim(train_data)
+    train_data<-train_data[ , ! apply( test_data , 2 , function(x) any(is.na(x)) ) ]
+    test_data<-test_data[ , ! apply( test_data , 2 , function(x) any(is.na(x)) ) ]
     
 
+```
+
+After preliminary data analysis I excluded the x variable, the subject names, the times stamps, and the window descritions as the tests seemed to be ordered by the class, thus these variable provides a correlation we cannot expect in future data sets.
+```{r, cache=TRUE}
+    ## Remove the X column as this is an idex that happens to be highly correlated to the outcomes due to sorting.
+    train_data<-train_data[ ,c(-1, -2,-3,-4, -5,-6,-7) ]
+    test_data<-test_data[ ,c(-1, -2,-3,-4, -5,-6,-7) ]
+    
+
+```
+
+    
+I also noticed that several numberic data points were stored as factors, so I converted the data set to numerics
+
+```{r, cache=TRUE}
+    for(i in c(1:(ncol(train_data)-1))){
+        train_data[,i]<-as.numeric(train_data[,i])
+        test_data[,i]<-as.numeric(test_data[,i])
+    }
     
 ```
 
-I allocated 75% of the data to my training set and reserved 25% for cross validation.
+I allocated 60% of the data to my training set and reserved 40% for cross validation.
 
 ```{r, cache=TRUE}
 ## Create training set split
-    inTrain<-createDataPartition(y=train_data$classe, p=.75, list=FALSE)
+    inTrain<-createDataPartition(y=train_data$classe, p=.6, list=FALSE)
     training<-train_data[inTrain,]
     testing<-train_data[-inTrain,]
 
 
 ```
 
-After testing linear and rPart models I selected the Random Forest model for my analysis.
+After testing linear and rPart models I selected the Random Forest model for my analysis.I have read that the number of trees required is optimized at when set tot he square root fo the vaiables. Here after rmoving incomplete variables I had 86 remaining, requiring approximately 10 trees.  To test this i build models with 3,6,10, and 25 trees and compared the error rate when testing against my test partition.  I found only marginal increase in predictive power compared to substantial increases in compute time when exceeding 10 trees.  
 
 ```{r, cache=TRUE}
-    forest<-train(classe ~., data=testing, method="rf", ntree=10,prox=TRUE)
-    forest2<-train(classe ~., data=training, method="rf", ntree=200,prox=TRUE)
+    start_time<-system.time()
+    forest<-train(classe ~., data=training, method="rf", ntree=10,prox=TRUE)
+    end_time<-system.time()
 
-```
+#     inTrain2<-createDataPartition(y=train_data$classe, p=.1, list=FALSE)
+#     training2<-train_data[inTrain,]
+#     testing2<-train_data[-inTrain,]
+# 
+#   
+#     time0<-system.time()
+#     forest3<-train(classe ~., data=training2, method="rf", ntree=3,prox=TRUE)
+#     time1<-system.time()
+#     forest6<-train(classe ~., data=training2, method="rf", ntree=6,prox=TRUE)
+#     time2<-system.time()
+#     forest10<-train(classe ~., data=training2, method="rf", ntree=10,prox=TRUE)
+#     time3<-system.time()
+#     forest25<-train(classe ~., data=training2, method="rf", ntree=25,prox=TRUE)
+#     time4<-system.time()
+#     
+#     pred3<-predict(forest3,testing2)
+#     pred6<-predict(forest6,testing2)
+#     pred10<-predict(forest10,testing2)
+#     pred25<-predict(forest25,testing2)
+#     
+#     correct3<-sum(testing$predRight)/length(pred3)
+#     correct6<-sum(testing$predRight)/length(pred6)
+#     correct10<-sum(testing$predRight)/length(pred10)
+#     correct25<-sum(testing$predRight)/length(pred25)
+    ```
 
 ```{r}
     
@@ -57,11 +99,41 @@ After testing linear and rPart models I selected the Random Forest model for my 
 
 #Expected Error rate
 
-Based on the cross validation of running the prediction against the partitioned section of the training data file, I expect the error rate in the test data to be approximately:
-
+Based on the cross validation of running the prediction against the partitioned section of the training data file, I expect the error rate in the test data to be approximately: 'r correct'
 
 ```{r}
-pred<-predict(forest,training)
-    training$predRight<-pred==training$classe
-    table(pred,training$classe)
+    pred<-predict(forest,testing)
+    testing$predRight<-pred==testing$classe
+    correct<-sum(testing$predRight)/length(pred)
+    correct
+
 ```
+
+
+And the confusion matrix is as follows:
+```{r}
+    table(pred,testing$classe)
+
+```
+
+For the test data file I ran my final model against the test data with the following result:
+
+```{r}
+    pred_from_test<-predict(forest,test_data)
+    answers<-as.character(pred_from_test)
+
+    ## I am using the instructors code for creating my output files.
+
+    pml_write_files = function(x){
+        n = length(x)
+        for(i in 1:n){
+            filename = paste0("problem_id_",i,".txt")
+            write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+        }
+    }
+
+
+pml_write_files(answers)
+
+```
+
