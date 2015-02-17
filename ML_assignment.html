@@ -102,7 +102,7 @@ img {
 </div>
 <div id="model-building" class="section level1">
 <h1>Model Building</h1>
-<p>After testing linear and rPart models I selected the Random Forest model for my analysis. I have read that the number of trees required is optimized at when set to the square root of the vaiables. Here after removing incomplete variables I had 53 remaining, requiring approximately 8 trees.</p>
+<p>After testing linear and rPart models I selected the Random Forest model for my analysis. I have read on Stack Overflow that the number of trees required is optimized at when set to the square root of the vaiables. Here after removing incomplete variables I had 53 remaining, requiring approximately 8 trees.</p>
 <pre class="r"><code>    forest&lt;-train(classe ~., data=training, method=&quot;rf&quot;, ntree=8,prox=TRUE)</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-10
@@ -118,16 +118,16 @@ img {
 <pre class="r"><code>    testing$predRight&lt;-pred==testing$classe
     correct&lt;-sum(testing$predRight)/length(pred)
     correct</code></pre>
-<pre><code>## [1] 0.9839409</code></pre>
+<pre><code>## [1] 0.9840683</code></pre>
 <p>And the confusion matrix is as follows:</p>
 <pre class="r"><code>    table(pred,testing$classe)</code></pre>
 <pre><code>##     
 ## pred    A    B    C    D    E
-##    A 2217   16    0    3    1
-##    B   12 1480   23    3    3
-##    C    1   16 1338   19    4
-##    D    1    5    6 1258    7
-##    E    1    1    1    3 1427</code></pre>
+##    A 2218   14    0    3    0
+##    B   10 1481   22    4    3
+##    C    1   13 1340   23    5
+##    D    2    8    5 1253    5
+##    E    1    2    1    3 1429</code></pre>
 <p>These results confirm that limiting to 8 trees was sufficient for a good predictive model. I did test with more trees, up to 50, and found only marginal improvement in the results with greatly increased compute time.</p>
 <p>For the test data file I ran my final model against the test data with the following result:</p>
 <pre class="r"><code>    pred_from_test&lt;-predict(forest,test_data)
